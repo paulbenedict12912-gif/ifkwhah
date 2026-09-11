@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>Script</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;font-family:Arial,sans-serif}
+body{background:#030303;color:#fff}
+#liquid{position:fixed;inset:0;width:100%;height:100%;z-index:0}
+.overlay{position:fixed;inset:0;background:radial-gradient(circle at 50% 45%,rgba(255,255,255,.07),transparent 38%),rgba(0,0,0,.18);z-index:1}
+.app{position:relative;z-index:2;width:100%;height:100%;display:flex;align-items:center;justify-content:center}
+.buttons{display:flex;gap:14px;align-items:center;justify-content:center}
+.buttons button{position:relative;overflow:hidden}
+.buttons button::after{content:"";position:absolute;top:-70%;left:-90%;width:45%;height:240%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.18),transparent);transform:rotate(18deg);animation:shine 4.5s ease-in-out infinite}
+.buttons button:nth-child(2)::after{animation-delay:1.8s}
+@keyframes shine{0%,55%{left:-90%}75%,100%{left:150%}}
+.view{display:none}.view.active{display:block}
+button{border:1px solid rgba(255,255,255,.22);background:linear-gradient(145deg,rgba(45,45,45,.72),rgba(10,10,10,.72));color:#fff;border-radius:12px;padding:10px 18px;font-size:14px;font-weight:700;cursor:pointer;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease,background .18s ease;box-shadow:0 8px 28px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.08)}
+button:hover{transform:translateY(-2px);border-color:rgba(255,255,255,.4);box-shadow:0 12px 32px rgba(255,255,255,.08),0 8px 28px rgba(0,0,0,.35)}
+button:active{transform:scale(.96)}
+button.clicking{animation:buttonClick .42s ease}
+@keyframes buttonClick{0%{transform:scale(1)}35%{transform:scale(.88)}65%{transform:scale(1.06)}100%{transform:scale(1)}}
+.view.enter{animation:viewEnter .5s cubic-bezier(.2,.8,.2,1)}@keyframes viewEnter{0%{opacity:0;transform:translateY(18px) scale(.96);filter:blur(7px)}55%{opacity:1;transform:translateY(-3px) scale(1.01);filter:blur(0)}100%{opacity:1;transform:translateY(0) scale(1)}}
+#script,#admin,#key{width:min(92%,500px);height:min(55%,400px);background:linear-gradient(145deg,rgba(18,18,18,.82),rgba(4,4,4,.72));padding:18px;border-radius:18px;border:1px solid rgba(255,255,255,.16);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);box-shadow:0 25px 70px rgba(0,0,0,.48),inset 0 1px 0 rgba(255,255,255,.08)}
+.top{display:flex;align-items:center;gap:12px;margin-bottom:14px}.top h1{font-size:21px;margin:0;letter-spacing:-.3px}
+textarea{width:100%;height:190px;min-height:120px;resize:none;border:1px solid rgba(255,255,255,.13);outline:none;border-radius:13px;background:rgba(0,0,0,.48);color:#fff;padding:14px;font-size:13px;font-family:monospace;box-shadow:inset 0 1px 8px rgba(0,0,0,.35);transition:border-color .2s,box-shadow .2s}
+textarea:focus{border-color:rgba(255,255,255,.3);box-shadow:0 0 0 3px rgba(255,255,255,.04),inset 0 1px 8px rgba(0,0,0,.35)}
+.actions{display:flex;justify-content:flex-end;gap:8px;margin-top:10px}.copy{background:linear-gradient(145deg,#fff,#dcdcdc);color:#000;border-color:#fff;box-shadow:0 6px 20px rgba(255,255,255,.12)}
+#admin textarea{height:190px}#key{text-align:center;height:auto}input{width:100%;padding:12px;border-radius:11px;border:1px solid #333;background:rgba(0,0,0,.55);color:#fff;margin:8px 0;outline:none}
+#adminMsg{font-size:12px;opacity:.75;margin-top:8px}
+@media(max-width:500px){.buttons{gap:9px}button{padding:9px 14px;font-size:13px}#script,#admin{width:94%;height:48%;padding:14px;border-radius:16px}textarea{height:150px;min-height:100px}}
+
+ .gate{width:min(92%,430px);margin:0 auto;background:linear-gradient(145deg,rgba(20,20,20,.90),rgba(6,6,6,.82));padding:24px;border-radius:24px;border:1px solid rgba(255,255,255,.14);backdrop-filter:blur(26px);-webkit-backdrop-filter:blur(26px);box-shadow:0 30px 90px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.09)}
+.gateHeader{display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;margin-bottom:7px}
+.gateIcon{width:50px;height:50px;border-radius:16px;display:grid;place-items:center;background:linear-gradient(145deg,#fff,#cfcfcf);color:#080808;font-size:22px;box-shadow:0 10px 30px rgba(255,255,255,.13),inset 0 1px 0 #fff}
+.eyebrow{font-size:9px;letter-spacing:2.5px;opacity:.45;font-weight:800;margin-bottom:4px}.gateHeader h1{font-size:22px;margin:0;letter-spacing:-.5px}.gateSub{text-align:center;margin:0 auto 20px;opacity:.58;font-size:12.5px;line-height:1.5}
+.verifyList{display:grid;gap:10px}.verifyBtn{min-height:60px;width:100%;display:flex;align-items:center;justify-content:flex-start;text-align:left;padding:12px 15px;gap:11px;border-radius:16px!important;background:linear-gradient(145deg,rgba(35,35,35,.70),rgba(10,10,10,.68))}
+.verifyBtn span{font-weight:700;letter-spacing:.05px}.verifyBtn:before{content:"";width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.42);flex:none;box-shadow:0 0 10px rgba(255,255,255,.16)}.verifyBtn b{margin-left:auto;font-size:17px;opacity:.58;font-weight:700}
+.verifyBtn.verified:before{background:#9dffb5;box-shadow:0 0 13px rgba(100,255,150,.72)}.verifyBtn.verifying{pointer-events:none;opacity:.78}.verifyBtn.verified{border-color:rgba(100,255,150,.48);background:linear-gradient(145deg,rgba(28,68,40,.72),rgba(7,24,13,.74))}.verifyBtn.verified b{opacity:1}
+.continueBtn{width:100%;margin-top:15px;min-height:50px;border-radius:15px!important;background:linear-gradient(145deg,#fff,#dedede);color:#000;border-color:#fff}.continueBtn:disabled{opacity:.28;cursor:not-allowed;transform:none;box-shadow:none}.continueBtn:not(:disabled){animation:continuePulse 1.6s ease-in-out infinite}
+@keyframes continuePulse{0%,100%{box-shadow:0 6px 20px rgba(255,255,255,.10)}50%{box-shadow:0 0 30px rgba(255,255,255,.25)}}
+@media(max-width:500px){.gate{width:calc(100% - 30px);padding:20px;border-radius:22px}.gateHeader h1{font-size:20px}.verifyBtn{min-height:58px;padding:11px 13px}}
+
+.keyCard{width:min(92%,430px);margin:0 auto;text-align:center;background:linear-gradient(145deg,rgba(20,20,20,.90),rgba(6,6,6,.82));padding:28px 24px;border-radius:24px;border:1px solid rgba(255,255,255,.14);backdrop-filter:blur(26px);-webkit-backdrop-filter:blur(26px);box-shadow:0 30px 90px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.09)}
+.keyIcon{width:54px;height:54px;margin:0 auto 12px;border-radius:17px;display:grid;place-items:center;background:linear-gradient(145deg,#fff,#d8d8d8);font-size:24px;box-shadow:0 10px 30px rgba(255,255,255,.13)}
+.keyCard h1{margin:3px 0 8px;font-size:25px;letter-spacing:-.5px}.keyCard p{margin:0 auto 20px;opacity:.58;font-size:13px;min-height:18px}.keyBtn{width:100%;min-height:52px;border-radius:15px!important;background:linear-gradient(145deg,#fff,#dedede);color:#000;border-color:#fff}.keyBtn:disabled{opacity:.55;cursor:wait;transform:none}.keyBtn.ready{animation:continuePulse 1.5s ease-in-out infinite}
+@media(max-width:500px){.keyCard{width:calc(100% - 30px);padding:24px 20px;border-radius:22px}}
+</style>
+</head>
+<body>
+<canvas id="liquid"></canvas><div class="overlay"></div>
+<div class="app">
+<section id="home" class="view active"><div class="buttons">
+<button onclick="show('script',this)">Get Script</button><button onclick="show('key',this)">Get KEY</button>
+</div></section>
+
+<section id="script" class="view">
+<div id="gate" class="gate">
+  <div class="gateHeader"><div class="gateIcon">✦</div><div><div class="eyebrow">ACCESS CHECK</div><h1>Complete the steps</h1></div></div>
+  <p class="gateSub">Complete all 3 steps to continue.</p>
+  <div class="verifyList">
+    <button class="verifyBtn" id="subBtn" onclick="verifyStep('subBtn','Subscribe to this Channel','https://m.youtube.com/@ronielcapilitan4741')"><span>Subscribe to this Channel</span><b>→</b></button>
+    <button class="verifyBtn" id="discordBtn" onclick="verifyStep('discordBtn','Join Discord','https://discord.gg/y2RpyFEmV')"><span>Join Discord</span><b>→</b></button>
+    <button class="verifyBtn" id="likeBtn" onclick="verifyStep('likeBtn','like the video',null)"><span>like the video</span><b>→</b></button>
+  </div>
+  <button id="continueBtn" class="continueBtn" disabled onclick="show('copy',this)">Continue</button>
+</div>
+</section>
+
+<section id="copy" class="view">
+<div class="top"><h1>Copy script</h1></div>
+<textarea id="scriptBox" readonly>loadstring(game:HttpGet("https://api.jnkie.com/api/v1/luascripts/public/ce5bd40a9644ce1ffdddeb83f5d96900c16b5528d729d2b28b7b52ed9bf22dfa/download"))()</textarea>
+<div class="actions"><button class="copy" onclick="copyScript()">Copy</button></div>
+</section>
+
+<section id="key" class="view">
+<div class="keyCard">
+  <div class="keyIcon">🔑</div>
+  <div class="eyebrow">KEY ACCESS</div>
+  <h1>Get KEY</h1>
+  <p id="keyStatus">Tap the button below to continue.</p>
+  <button id="getKeyBtn" class="keyBtn" onclick="startKeyFlow(this)">Get KEY</button>
+</div>
+</section>
+
+<section id="admin" class="view">
+<div class="top"><button onclick="show('home',this)">←</button><h1>Admin</h1></div>
+<input id="token" type="password" placeholder="Admin token">
+<textarea id="adminBox" placeholder="Paste your script here...">loadstring(game:HttpGet("https://api.jnkie.com/api/v1/luascripts/public/ce5bd40a9644ce1ffdddeb83f5d96900c16b5528d729d2b28b7b52ed9bf22dfa/download"))()</textarea>
+<div class="actions"><button onclick="loadScript()">Load</button><button class="copy" onclick="saveScript()">Save Script</button></div>
+<div id="adminMsg"></div>
+</section>
+</div>
+
+<script>
+const API_URL="YOUR_CLOUDFLARE_WORKER_URL";
+let liquidSpeedBoost=1,liquidBoostTimer;
+function startKeyFlow(btn){
+ if(btn.disabled) return;
+ const status=document.getElementById('keyStatus');
+ btn.disabled=true;
+ let left=5;
+ btn.textContent='Get KEY';
+ status.textContent='Redirecting in '+left+'...';
+ const timer=setInterval(()=>{
+   left--;
+   if(left>0){status.textContent='Redirecting in '+left+'...';return;}
+   clearInterval(timer);
+   btn.textContent='Opening...';
+   status.textContent='Opening key page...';
+   window.location.href='https://jnkie.com/flow/37a2c1c8-61a5-4337-8dc7-8fafa6d1c2bb';
+ },1000);
+}
+
+function show(id,btn){
+ if(btn){btn.classList.remove('clicking');void btn.offsetWidth;btn.classList.add('clicking')}
+ liquidSpeedBoost=7;clearTimeout(liquidBoostTimer);liquidBoostTimer=setTimeout(()=>liquidSpeedBoost=1,700);
+ document.querySelectorAll('.view').forEach(v=>v.classList.remove('active','enter'));
+ const t=document.getElementById(id);t.classList.add('active');requestAnimationFrame(()=>t.classList.add('enter'));
+ if(id==='script')loadPublicScript();
+}
+
+const verifiedSteps=new Set();
+function verifyStep(id,label,url){
+ const btn=document.getElementById(id);
+ if(verifiedSteps.has(id)) return;
+ if(url) window.open(url,'_blank','noopener,noreferrer');
+ let left=8;
+ btn.classList.add('verifying');
+ btn.querySelector('span').textContent='Verifying... '+left;
+ const timer=setInterval(()=>{
+   left--;
+   if(left>0){btn.querySelector('span').textContent='Verifying... '+left;return;}
+   clearInterval(timer);
+   verifiedSteps.add(id);
+   btn.classList.remove('verifying');
+   btn.classList.add('verified');
+   btn.querySelector('span').textContent='Verified';
+   btn.querySelector('b').textContent='✓';
+   document.getElementById('continueBtn').disabled=verifiedSteps.size!==3;
+ },1000);
+}
+async function loadPublicScript(){
+ const box=document.getElementById('scriptBox');
+ if(!API_URL || API_URL==="YOUR_CLOUDFLARE_WORKER_URL") return;
+ try{
+   const r=await fetch(API_URL+'/script');
+   const d=await r.json();
+   if(r.ok && typeof d.script === 'string' && d.script) box.value=d.script;
+ }catch(e){
+   // Keep the built-in script visible if the backend is unavailable.
+ }
+}
+async function saveScript(){
+ const token=document.getElementById('token').value,script=document.getElementById('adminBox').value,msg=document.getElementById('adminMsg');
+ try{const r=await fetch(API_URL+'/script',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({script})});const d=await r.json();msg.textContent=d.message||d.error||'Saved.'}
+ catch(e){msg.textContent='Could not connect to the server.'}
+}
+async function loadScript(){
+ const token=document.getElementById('token').value,msg=document.getElementById('adminMsg');
+ try{const r=await fetch(API_URL+'/admin/script',{headers:{'Authorization':'Bearer '+token}});const d=await r.json();if(!r.ok)throw Error();document.getElementById('adminBox').value=d.script||'';msg.textContent='Loaded.'}
+ catch(e){msg.textContent='Invalid token or server error.'}
+}
+async function copyScript(){
+ const box=document.getElementById('scriptBox');try{await navigator.clipboard.writeText(box.value)}catch(e){box.select();document.execCommand('copy')}
+ const b=document.querySelector('.copy'),old=b.textContent;b.textContent='Copied!';setTimeout(()=>b.textContent=old,900)
+}
+const c=document.getElementById('liquid'),ctx=c.getContext('2d');let w,h,dpr,blobs=[];
+function resize(){dpr=Math.min(devicePixelRatio||1,2);w=innerWidth;h=innerHeight;c.width=w*dpr;c.height=h*dpr;c.style.width=w+'px';c.style.height=h+'px';ctx.setTransform(dpr,0,0,dpr,0,0);blobs=Array.from({length:11},()=>({x:Math.random()*w,y:Math.random()*h,r:80+Math.random()*170,vx:(Math.random()-.5)*.35,vy:(Math.random()-.5)*.35,phase:Math.random()*6.28}))}
+function animate(){ctx.clearRect(0,0,w,h);ctx.fillStyle='#050505';ctx.fillRect(0,0,w,h);ctx.globalCompositeOperation='screen';for(const b of blobs){b.x+=b.vx*liquidSpeedBoost;b.y+=b.vy*liquidSpeedBoost;b.phase+=.008*liquidSpeedBoost;if(b.x<-b.r)b.x=w+b.r;if(b.x>w+b.r)b.x=-b.r;if(b.y<-b.r)b.y=h+b.r;if(b.y>h+b.r)b.y=-b.r;let r=b.r*(.85+.15*Math.sin(b.phase)),g=ctx.createRadialGradient(b.x,b.y,0,b.x,b.y,r);g.addColorStop(0,'rgba(255,255,255,.38)');g.addColorStop(.35,'rgba(255,255,255,.15)');g.addColorStop(1,'rgba(255,255,255,0)');ctx.fillStyle=g;ctx.beginPath();ctx.arc(b.x,b.y,r,0,Math.PI*2);ctx.fill()}ctx.globalCompositeOperation='source-over';requestAnimationFrame(animate)}
+addEventListener('resize',resize);resize();requestAnimationFrame(animate);
+</script>
+</body></html>
